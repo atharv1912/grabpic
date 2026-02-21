@@ -1,0 +1,78 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 32px;
+  background-color: #000000;
+  border-bottom: 2px solid #00ffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff00ff;
+  cursor: pointer;
+  letter-spacing: 2px;
+  font-family: 'Courier Prime', monospace;
+  text-transform: uppercase;
+  transition: all 120ms;
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
+}
+
+.logo:hover {
+  color: #00ffff;
+  text-shadow: 0 0 16px rgba(0, 255, 255, 0.8);
+  transform: scale(1.08);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.greeting {
+  font-size: 12px;
+  color: #00ffff;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.profileBtn {
+  background-color: transparent;
+  color: #00ffff;
+  border: 2px solid #00ffff;
+  border-radius: 0;
+  font-family: 'Courier Prime', monospace;
+  transition: all 120ms;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+.profileBtn:hover {
+  background-color: #00ffff;
+  color: #000000;
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.8), inset 0 0 8px rgba(0, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.logoutBtn {
+  background-color: transparent;
+  color: #ff00ff;
+  border: 2px solid #ff00ff;
+  border-radius: 0;
+  font-family: 'Courier Prime', monospace;
+  transition: all 120ms;
+  box-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+}
+
+.logoutBtn:hover {
+  background-color: #ff00ff;
+  color: #000000;
+  box-shadow: 0 0 16px rgba(255, 0, 255, 0.8), inset 0 0 8px rgba(255, 0, 255, 0.2);
+  transform: scale(1.05);
+}

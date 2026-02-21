@@ -1,62 +1,70 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getUserGroups } from '../../services/groups'
+import styles from './Dashboard.module.css'
 
-const mockGroups = [
-  { id: '1', name: 'Trip to Goa', memberCount: 5, photoCount: 23 },
-  { id: '2', name: 'College Reunion', memberCount: 12, photoCount: 47 },
-  { id: '3', name: 'Office Party', memberCount: 8, photoCount: 15 },
-]
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 function Dashboard() {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    // simulating an API call with a small delay
-    setTimeout(() => {
-      setGroups(mockGroups)
+    const fetchGroups = async () => {
+      const data = await getUserGroups()
+      setGroups(data)
       setLoading(false)
-    }, 800)
+    }
+    fetchGroups()
   }, [])
 
-  const handleGroupClick = (groupId) => {
-    navigate(`/group/${groupId}`)
-  }
-
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
-
-  if (loading) return <div>Loading your groups...</div>
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading your groups...</div>
 
   return (
-    <div>
-      <div>
-        <h1>Welcome, {user?.name}</h1>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2>Your Groups</h2>
+        <p>Click a group to view and upload photos</p>
       </div>
 
-      <h2>Your Groups</h2>
-
       {groups.length === 0 ? (
-        <p>You have no groups yet. Create or join one!</p>
+        <div className={styles.empty}>
+          <p>You have no groups yet.</p>
+          <button>Create your first group</button>
+        </div>
       ) : (
-        <div>
+        <div className={styles.groupsGrid}>
           {groups.map((group) => (
-            <div key={group.id} onClick={() => handleGroupClick(group.id)}>
-              <h3>{group.name}</h3>
-              <p>{group.memberCount} members</p>
-              <p>{group.photoCount} photos</p>
+            <div
+              key={group.id}
+              className={styles.groupCard}
+              onClick={() => navigate(`/group/${group.id}`)}
+            >
+              <h3 className={styles.groupName}>{group.name}</h3>
+              <div className={styles.groupMeta}>
+                <span>👥 {group.memberCount} members</span>
+                <span>🖼 {group.photoCount} photos</span>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <button>Create Group</button>
-      <button>Join Group</button>
+      <div className={styles.actions}>
+        <button>Create Group</button>
+        <button className={styles.joinBtn}>Join Group</button>
+      </div>
     </div>
   )
 }

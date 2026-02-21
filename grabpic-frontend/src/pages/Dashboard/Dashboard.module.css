@@ -1,0 +1,135 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.header {
+  margin-bottom: 40px;
+  border-bottom: 2px solid #ff00ff;
+  padding-bottom: 20px;
+}
+
+.header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #00ffff;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+.header p {
+  color: #39ff14;
+  margin-top: 8px;
+  font-family: 'Courier Prime', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.groupsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.groupCard {
+  background: #0a0a0a;
+  border: 1px solid #00ffff;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: all 120ms;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.groupCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 0, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 120ms;
+  pointer-events: none;
+}
+
+.groupCard:hover {
+  border-color: #ff00ff;
+  box-shadow: 0 0 16px rgba(255, 0, 255, 0.6), inset 0 0 12px rgba(255, 0, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.groupCard:hover::before {
+  opacity: 1;
+}
+
+.groupName {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #ff00ff;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 1px;
+}
+
+.groupMeta {
+  display: flex;
+  gap: 16px;
+}
+
+.groupMeta span {
+  font-size: 11px;
+  color: #39ff14;
+  background: transparent;
+  padding: 4px 8px;
+  border: 1px solid #39ff14;
+  border-radius: 0;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 0.5px;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}
+
+.joinBtn {
+  background-color: transparent;
+  color: #39ff14;
+  border: 2px solid #39ff14;
+  border-radius: 0;
+  font-family: 'Courier Prime', monospace;
+  transition: all 120ms;
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+}
+
+.joinBtn:hover {
+  background-color: #39ff14;
+  color: #000000;
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.8), inset 0 0 8px rgba(57, 255, 20, 0.2);
+  transform: scale(1.05);
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: #00ffff;
+  border: 2px dashed #00ffff;
+  background-color: #0a0a0a;
+  font-family: 'Courier Prime', monospace;
+}
+
+.empty p {
+  margin-bottom: 24px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}

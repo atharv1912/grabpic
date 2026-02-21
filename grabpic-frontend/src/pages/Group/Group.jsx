@@ -1,22 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-
-const mockGroupData = {
-  id: '1',
-  name: 'Trip to Goa',
-  members: ['Ayesha', 'Rahul', 'You', 'Sneha', 'Dev'],
-}
-
-const mockMyPhotos = [
-  { id: '1', url: 'https://picsum.photos/seed/a/300/200', uploadedBy: 'Rahul' },
-  { id: '2', url: 'https://picsum.photos/seed/b/300/200', uploadedBy: 'Ayesha' },
-  { id: '3', url: 'https://picsum.photos/seed/c/300/200', uploadedBy: 'You' },
-]
+import { getGroupById } from '../../services/groups'
+import { getMyPhotosInGroup, uploadPhoto } from '../../services/photos'
+import styles from './Group.module.css'
 
 function Group() {
   const { id } = useParams()
-  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [group, setGroup] = useState(null)
@@ -26,66 +15,78 @@ function Group() {
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
-    setTimeout(() => {
-      setGroup(mockGroupData)
-      setMyPhotos(mockMyPhotos)
+    const fetchData = async () => {
+      const groupData = await getGroupById(id)
+      const photosData = await getMyPhotosInGroup(id)
+      setGroup(groupData)
+      setMyPhotos(photosData)
       setLoading(false)
-    }, 800)
+    }
+    fetchData()
   }, [id])
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0])
   }
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) return
-
     setUploading(true)
-    // later this will be a real API call with FormData
-    console.log('Uploading file:', selectedFile.name)
-
-    setTimeout(() => {
-      alert(`"${selectedFile.name}" uploaded! Face recognition is processing...`)
-      setSelectedFile(null)
-      setUploading(false)
-    }, 1000)
+    const result = await uploadPhoto(id, selectedFile)
+    alert(result.message)
+    setSelectedFile(null)
+    setUploading(false)
   }
 
-  if (loading) return <div>Loading group...</div>
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading group...</div>
 
   return (
-    <div>
-      <button onClick={() => navigate('/dashboard')}>← Back</button>
-
-      <h1>{group.name}</h1>
-      <p>{group.members.length} members: {group.members.join(', ')}</p>
-
-      <hr />
-
-      <h2>Upload a Photo</h2>
-      <input type="file" accept="image/*" onChange={handleFileChange} />
-      {selectedFile && <p>Selected: {selectedFile.name}</p>}
-      <button onClick={handleUpload} disabled={!selectedFile || uploading}>
-        {uploading ? 'Uploading...' : 'Upload'}
+    <div className={styles.container}>
+      <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
+        ← Back to Dashboard
       </button>
 
-      <hr />
+      <div className={styles.groupHeader}>
+        <h1>{group.name}</h1>
+        <p>👥 {group.members.join(', ')}</p>
+      </div>
 
-      <h2>Your Photos in this Group</h2>
-      <p>Photos where your face was recognized:</p>
-
-      {myPhotos.length === 0 ? (
-        <p>No photos found with your face yet.</p>
-      ) : (
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {myPhotos.map((photo) => (
-            <div key={photo.id}>
-              <img src={photo.url} alt="your photo" width={200} />
-              <p>Uploaded by: {photo.uploadedBy}</p>
-            </div>
-          ))}
+      <div className={styles.section}>
+        <h2>Upload a Photo</h2>
+        <div className={styles.uploadArea}>
+          <label className={styles.fileLabel}>
+            📷 Choose Photo
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
+          {selectedFile && (
+            <span className={styles.fileName}>{selectedFile.name}</span>
+          )}
+          <button onClick={handleUpload} disabled={!selectedFile || uploading}>
+            {uploading ? 'Uploading...' : 'Upload'}
+          </button>
         </div>
-      )}
+      </div>
+
+      <div className={styles.section}>
+        <h2>Your Photos in this Group</h2>
+        {myPhotos.length === 0 ? (
+          <p className={styles.empty}>No photos found with your face yet.</p>
+        ) : (
+          <div className={styles.photosGrid}>
+            {myPhotos.map((photo) => (
+              <div key={photo.id} className={styles.photoCard}>
+                <img src={photo.url} alt="your face in group" />
+                <div className={styles.photoMeta}>Uploaded by {photo.uploadedBy}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

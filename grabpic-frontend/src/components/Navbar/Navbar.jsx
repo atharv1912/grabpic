@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import styles from './Navbar.module.css'
 
 function Navbar() {
   const { user, logout } = useAuth()
@@ -11,25 +12,14 @@ function Navbar() {
   }
 
   return (
-    <nav style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '12px 24px',
-      borderBottom: '1px solid #ddd',
-      backgroundColor: '#fff'
-    }}>
-      <span
-        onClick={() => navigate('/dashboard')}
-        style={{ fontWeight: 'bold', fontSize: '20px', cursor: 'pointer' }}
-      >
+    <nav className={styles.navbar}>
+      <span className={styles.logo} onClick={() => navigate('/dashboard')}>
         GrabPic
       </span>
-
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <span>Hi, {user?.name}</span>
-        <button onClick={() => navigate('/profile')}>Profile</button>
-        <button onClick={handleLogout}>Logout</button>
+      <div className={styles.right}>
+        <span className={styles.greeting}>Hi, {user?.name}</span>
+        <button className={styles.profileBtn} onClick={() => navigate('/profile')}>Profile</button>
+        <button className={styles.logoutBtn} onClick={handleLogout}>Logout</button>
       </div>
     </nav>
   )
