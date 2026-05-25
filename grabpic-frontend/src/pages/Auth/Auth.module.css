@@ -3,57 +3,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #000000;
+  background-color: var(--background);
+  padding: 24px;
 }
 
 .card {
-  background: #0a0a0a;
-  padding: 40px;
-  border-radius: 0;
-  border: 2px solid #00ffff;
-  box-shadow: 0 0 24px rgba(0, 255, 255, 0.4), inset 0 0 16px rgba(0, 255, 255, 0.05);
+  background: var(--card);
+  padding: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
   width: 100%;
-  max-width: 400px;
-  position: relative;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
-  opacity: 0;
-  transition: opacity 200ms;
-  z-index: -1;
-}
-
-.card:hover::before {
-  opacity: 0.1;
+  max-width: 340px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #ff00ff;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
   text-align: center;
   margin-bottom: 8px;
-  font-family: 'Courier Prime', monospace;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
   text-align: center;
-  color: #00ffff;
-  margin-bottom: 28px;
-  font-size: 12px;
-  font-family: 'Courier Prime', monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin-bottom: 24px;
+  font-size: 14px;
 }
 
 .form {
@@ -64,38 +41,41 @@
 
 .submitBtn {
   width: 100%;
-  padding: 12px;
+  background-color: var(--primary);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
   font-size: 14px;
-  margin-top: 6px;
+  font-weight: 600;
+  border-radius: 6px;
+  margin-top: 8px;
+  transition: background-color 0.2s;
+}
+
+.submitBtn:hover {
+  background-color: #2c974b;
 }
 
 .toggle {
   text-align: center;
   margin-top: 24px;
-  font-size: 12px;
-  color: #00ffff;
-  font-family: 'Courier Prime', monospace;
-  letter-spacing: 1px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .toggleBtn {
   background: none;
   border: none;
-  color: #ff00ff;
+  color: var(--accent);
   padding: 0 4px;
-  font-weight: 700;
-  text-decoration: none;
-  font-family: 'Courier Prime', monospace;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 120ms;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  text-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+  transition: color 0.2s;
 }
 
 .toggleBtn:hover {
-  background: none;
-  color: #00ffff;
-  text-shadow: 0 0 16px rgba(0, 255, 255, 0.8);
-  transform: scale(1.1);
+  text-decoration: underline;
 }

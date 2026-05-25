@@ -41,7 +41,7 @@ function Dashboard() {
       {groups.length === 0 ? (
         <div className={styles.empty}>
           <p>You have no groups yet.</p>
-          <button>Create your first group</button>
+          <button className={styles.primaryBtn}>Create your first group</button>
         </div>
       ) : (
         <div className={styles.groupsGrid}>
@@ -51,10 +51,10 @@ function Dashboard() {
               className={styles.groupCard}
               onClick={() => navigate(`/group/${group.id}`)}
             >
-              <h3 className={styles.groupName}>{group.name}</h3>
+              <span className={styles.groupName}>{group.name}</span>
               <div className={styles.groupMeta}>
-                <span>👥 {group.memberCount} members</span>
-                <span>🖼 {group.photoCount} photos</span>
+                <span>{group.memberCount} members</span>
+                <span>{group.photoCount} photos</span>
               </div>
             </div>
           ))}
@@ -62,9 +62,10 @@ function Dashboard() {
       )}
 
       <div className={styles.actions}>
-        <button>Create Group</button>
+        <button className={styles.primaryBtn}>Create Group</button>
         <button className={styles.joinBtn}>Join Group</button>
       </div>
+
     </div>
   )
 }

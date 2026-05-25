@@ -48,14 +48,14 @@ function Group() {
 
       <div className={styles.groupHeader}>
         <h1>{group.name}</h1>
-        <p>👥 {group.members.join(', ')}</p>
+        <p>Members: {group.members.join(', ')}</p>
       </div>
 
       <div className={styles.section}>
         <h2>Upload a Photo</h2>
         <div className={styles.uploadArea}>
           <label className={styles.fileLabel}>
-            📷 Choose Photo
+            Choose Photo
             <input
               type="file"
               accept="image/*"
@@ -66,11 +66,12 @@ function Group() {
           {selectedFile && (
             <span className={styles.fileName}>{selectedFile.name}</span>
           )}
-          <button onClick={handleUpload} disabled={!selectedFile || uploading}>
+          <button className={styles.primaryBtn} onClick={handleUpload} disabled={!selectedFile || uploading}>
             {uploading ? 'Uploading...' : 'Upload'}
           </button>
         </div>
       </div>
+
 
       <div className={styles.section}>
         <h2>Your Photos in this Group</h2>
