@@ -1,5 +1,5 @@
-import { publishPhotoJob } from "../../utils/queue.utils";
-import { supabase } from "../../config/db";
+import { publishPhotoJob } from "../../utils/queue.utils.js";
+import { supabase } from "../../config/db.js";
 
 export const processPhoto = async({
     photoId , r2Key , eventId

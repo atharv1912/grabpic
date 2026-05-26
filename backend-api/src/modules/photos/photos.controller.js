@@ -8,9 +8,10 @@ export const uploadPhoto = async (req , res , next)=>{
             {
                 file : req.file,
                 eventId: req.params.eventId, 
-                userId: req.user.userId
+                userId: req.user.id
             });
             res.status(201).json(photo);
+            
     } catch (err) {
         next(err);
     }
@@ -21,7 +22,7 @@ export const getEventPhotos = async(req , res ,next) =>{
             eventId: req.params.eventId, 
             userId : req.user.userId,
         });
-        req.json(photos);
+        res.json(photos);
 
     }catch(err){
         next(err);

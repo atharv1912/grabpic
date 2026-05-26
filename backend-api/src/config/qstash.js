@@ -1,6 +1,6 @@
 import { Client } from '@upstash/qstash';
-import { env } from './env.js';
+import 'dotenv/config';
 
 export const qstash = new Client({
-  token: env.QSTASH_TOKEN,
+  token: process.env.QSTASH_TOKEN,
 });
