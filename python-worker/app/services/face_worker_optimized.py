@@ -87,7 +87,7 @@ class FaceEmbeddingWorker:
         
         return img, 1.0
     
-    def process_image(self, image_path: str) -> List[DetectedFace]:
+    def process_image(self, image_path) -> List[DetectedFace]:
         """
         Process an image and return all detected faces with embeddings.
         

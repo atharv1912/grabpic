@@ -1,138 +1,98 @@
-from supabase import create_client, Client
+import boto3
+import cv2
 import os
-from dotenv import load_dotenv
 import logging
 import tempfile
+from dotenv import load_dotenv
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-
 class StorageClient:
     """
-    Supabase Storage client for downloading images.
-    Much simpler than R2 - uses existing Supabase client!
+    R2 Storage client — drop-in replacement for Supabase Storage.
+    Only download_image() is used by the worker, interface stays the same.
     """
-    
-    def __init__(self, bucket_name: str = 'event-photos'):
-        """
-        Initialize Supabase Storage client.
-        
-        Args:
-            bucket_name: Name of the storage bucket in Supabase
-        """
-        url = os.getenv('SUPABASE_URL')
-        key = os.getenv('SUPABASE_KEY')
-        
-        if not url or not key:
-            raise ValueError("Missing Supabase credentials")
-        
-        self.client: Client = create_client(url, key)
-        self.bucket_name = bucket_name
-        
-        logger.info(f"Storage client initialized for bucket: {bucket_name}")
-    
+
+    def __init__(self):
+        endpoint_url = os.getenv("R2_ENDPOINT") or os.getenv("R2_ENDPOINT_URL")
+        access_key = os.getenv("R2_ACCESS_KEY") or os.getenv("R2_ACCESS_KEY_ID")
+        secret_key = os.getenv("R2_SECRET_KEY") or os.getenv("R2_SECRET_ACCESS_KEY")
+        self.bucket = os.getenv("R2_BUCKET") or os.getenv("R2_BUCKET_NAME")
+
+        missing = []
+        if not endpoint_url:
+            missing.append("R2_ENDPOINT")
+        if not access_key:
+            missing.append("R2_ACCESS_KEY")
+        if not secret_key:
+            missing.append("R2_SECRET_KEY")
+        if not self.bucket:
+            missing.append("R2_BUCKET")
+
+        if missing:
+            raise ValueError(f"Missing R2 configuration: {', '.join(missing)}")
+
+        self.r2 = boto3.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name="auto",
+        )
+        logger.info("R2 storage client initialized")
+
     def download_image(self, path: str, local_path: str = None) -> str:
         """
-        Download an image from Supabase Storage to local filesystem.
+        Downloads image from R2 and returns a local file path.
         
-        Args:
-            path: File path in bucket (e.g., 'events/event123/photo1.jpg')
-            local_path: Optional local path. If None, creates temp file.
-            
-        Returns:
-            Path to downloaded file
+        NOTE: The face worker expects a filesystem path, so this helper
+        materializes the object to a temporary file and returns that path.
+        local_path is kept for compatibility; when provided it is used as-is.
         """
         try:
-            # Create temp file if no path provided
-            if local_path is None:
-                extension = os.path.splitext(path)[1] or '.jpg'
-                temp_file = tempfile.NamedTemporaryFile(
-                    delete=False, 
-                    suffix=extension,
-                    prefix='storage_download_'
-                )
-                local_path = temp_file.name
-                temp_file.close()
-            
-            # Download from Supabase Storage
-            logger.info(f"Downloading {path} from Supabase Storage")
-            
-            data = self.client.storage.from_(self.bucket_name).download(path)
-            
-            # Write to local file
-            with open(local_path, 'wb') as f:
-                f.write(data)
-            
-            # Verify file
-            file_size = os.path.getsize(local_path)
-            logger.info(f"Downloaded {file_size} bytes to {local_path}")
-            
-            if file_size == 0:
+            if not path:
+                raise ValueError("Storage path is required")
+
+            logger.info(f"Downloading {path} from R2")
+
+            response = self.r2.get_object(Bucket=self.bucket, Key=path)
+            image_bytes = response["Body"].read()
+
+            if not image_bytes:
                 raise ValueError("Downloaded file is empty")
-            
-            return local_path
-            
+
+            if local_path:
+                output_path = local_path
+                with open(output_path, "wb") as file_handle:
+                    file_handle.write(image_bytes)
+            else:
+                suffix = os.path.splitext(path)[1] or ".jpg"
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+                    tmp_file.write(image_bytes)
+                    output_path = tmp_file.name
+
+            decoded_image = cv2.imread(output_path)
+            if decoded_image is None:
+                raise ValueError(f"Could not decode image at {path}")
+
+            logger.info(f"Downloaded image to: {output_path}")
+            return output_path
+
         except Exception as e:
-            logger.error(f"Error downloading {path}: {e}")
+            logger.error(f"Error downloading {path} from R2: {e}")
             raise
-    
+
     def get_public_url(self, path: str) -> str:
-        """
-        Get public URL for a file (if bucket is public).
-        
-        Args:
-            path: File path in bucket
-            
-        Returns:
-            Public URL
-        """
-        try:
-            url = self.client.storage.from_(self.bucket_name).get_public_url(path)
-            return url
-        except Exception as e:
-            logger.error(f"Error getting public URL for {path}: {e}")
-            raise
-    
+        """Returns public URL using R2 public domain."""
+        public_url = os.getenv("R2_PUBLIC_URL")
+        return f"{public_url}/{path}"
+
     def create_signed_url(self, path: str, expiration: int = 3600) -> str:
-        """
-        Create a signed URL for private files.
-        
-        Args:
-            path: File path in bucket
-            expiration: URL expiration in seconds (default 1 hour)
-            
-        Returns:
-            Signed URL
-        """
-        try:
-            result = self.client.storage.from_(self.bucket_name).create_signed_url(
-                path, 
-                expiration
-            )
-            return result['signedURL']
-        except Exception as e:
-            logger.error(f"Error creating signed URL for {path}: {e}")
-            raise
-
-
-if __name__ == "__main__":
-    # Test Storage client
-    logging.basicConfig(level=logging.INFO)
-    
-    try:
-        client = StorageClient(bucket_name='event-photos')
-        print("✅ Storage client initialized successfully")
-        
-        # To test download, you'll need to upload a test file first:
-        # 1. Go to Supabase Dashboard > Storage
-        # 2. Create bucket 'event-photos'
-        # 3. Upload a test image
-        # 4. Then uncomment below:
-        
-        # test_path = "test_images/sample.jpg"
-        # local_file = client.download_image(test_path)
-        # print(f"✅ Downloaded to: {local_file}")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
+        """Generates a presigned URL for private access."""
+        url = self.r2.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self.bucket, "Key": path},
+            ExpiresIn=expiration,
+        )
+        return url

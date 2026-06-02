@@ -94,15 +94,17 @@ class SupabaseClient:
         """
         try:
             data = {
-                'processed': True,
-                'processed_at': 'now()',
-                'face_count': face_count,
+                'status': 'processed',
+                
             }
             
             if error:
                 data['processing_error'] = error
             
-            result = self.client.table('photos').update(data).eq('id', photo_id).execute()
+            # Remove None values so we don't overwrite DB defaults/columns that don't exist
+            clean_data = {k: v for k, v in data.items() if v is not None}
+
+            result = self.client.table('photos').update(clean_data).eq('id', photo_id).execute()
             
             logger.info(f"Marked photo {photo_id} as processed (faces: {face_count})")
             return result.data[0] if result.data else None
@@ -134,18 +136,21 @@ class SupabaseClient:
             # Convert embedding to list
             embedding_list = query_embedding.tolist() if isinstance(query_embedding, np.ndarray) else query_embedding
             
-            # Call the match_faces function
-            result = self.client.rpc(
-                'match_faces',
-                {
-                    'query_embedding': embedding_list,
-                    'match_threshold': threshold,
-                    'match_count': limit,
-                    'filter_event_id': event_id
-                }
-            ).execute()
-            
-            return result.data
+            # Prepare params for the `match_faces` RPC; keep event filter optional
+            rpc_params = {
+                'query_embedding': embedding_list,
+                'match_threshold': float(threshold),
+                'match_count': int(limit),
+            }
+
+            if event_id:
+                rpc_params['filter_event_id'] = event_id
+
+            result = self.client.rpc('match_faces', rpc_params).execute()
+
+            matches = result.data or []
+            logger.info(f"match_faces returned {len(matches)} results for event={event_id}")
+            return matches
             
         except Exception as e:
             logger.error(f"Error finding similar faces: {e}")
@@ -171,16 +176,19 @@ class SupabaseClient:
         try:
             embedding_list = query_embedding.tolist() if isinstance(query_embedding, np.ndarray) else query_embedding
             
-            result = self.client.rpc(
-                'get_photos_with_face',
-                {
-                    'query_embedding': embedding_list,
-                    'target_event_id': event_id,
-                    'match_threshold': threshold
-                }
-            ).execute()
-            
-            return result.data
+            rpc_params = {
+                'query_embedding': embedding_list,
+                'match_threshold': float(threshold),
+            }
+
+            if event_id:
+                rpc_params['target_event_id'] = event_id
+
+            result = self.client.rpc('get_photos_with_face', rpc_params).execute()
+
+            photos = result.data or []
+            logger.info(f"get_photos_with_face returned {len(photos)} photos for event={event_id}")
+            return photos
             
         except Exception as e:
             logger.error(f"Error getting photos: {e}")

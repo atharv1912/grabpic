@@ -43,11 +43,9 @@ def get_face_worker():
 
 
 def get_storage_client():
-    """Lazy initialization of storage client"""
     global storage_client
     if storage_client is None:
-        bucket_name = os.getenv('SUPABASE_STORAGE_BUCKET', 'event-photos')
-        storage_client = StorageClient(bucket_name=bucket_name)
+        storage_client = StorageClient()
     return storage_client
 
 
@@ -145,8 +143,7 @@ def process_photo():
                 face_count=0,
                 error=f"Face detection failed: {str(e)}"
             )
-            
-            # Clean up temp file
+
             if local_image_path and os.path.exists(local_image_path):
                 os.remove(local_image_path)
             
@@ -245,6 +242,7 @@ def search_faces():
     """
     try:
         data = request.get_json()
+        local_selfie_path = None
         
         if not data:
             return jsonify({'error': 'No JSON payload provided'}), 400
@@ -263,14 +261,14 @@ def search_faces():
         
         # 1. Download selfie
         storage = get_storage_client()
-        local_selfie_path = storage.download_image(selfie_path)
+        
         
         # 2. Extract face from selfie
         worker = get_face_worker()
+        local_selfie_path = storage.download_image(selfie_path)
         selfie_faces = worker.process_image(local_selfie_path)
-        
+
         if len(selfie_faces) == 0:
-            os.remove(local_selfie_path)
             return jsonify({
                 'error': 'No face detected in selfie',
                 'matches': []
@@ -292,19 +290,6 @@ def search_faces():
         )
         
         # 4. Clean up
-        os.remove(local_selfie_path)
-        
-        # 5. Return results
-        logger.info(f"Found {len(matches)} matching photos")
-        
-        return jsonify({
-            'success': True,
-            'event_id': event_id,
-            'matches': len(matches),
-            'threshold': threshold,
-            'photos': matches
-        }), 200
-        
     except Exception as e:
         logger.error(f"Search failed: {e}")
         logger.error(traceback.format_exc())
@@ -313,6 +298,20 @@ def search_faces():
             'error': 'Search failed',
             'details': str(e)
         }), 500
+    finally:
+        if local_selfie_path and os.path.exists(local_selfie_path):
+            os.remove(local_selfie_path)
+
+    # 5. Return results
+    logger.info(f"Found {len(matches)} matching photos")
+
+    return jsonify({
+        'success': True,
+        'event_id': event_id,
+        'matches': len(matches),
+        'threshold': threshold,
+        'photos': matches
+    }), 200
 
 
 if __name__ == '__main__':
