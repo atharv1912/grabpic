@@ -176,6 +176,10 @@ class SupabaseClient:
         try:
             embedding_list = query_embedding.tolist() if isinstance(query_embedding, np.ndarray) else query_embedding
             
+            # Log embedding details for debugging
+            logger.info(f"Query embedding norm: {np.linalg.norm(query_embedding):.4f}")
+            logger.info(f"Query embedding shape: {np.array(embedding_list).shape}")
+            
             rpc_params = {
                 'query_embedding': embedding_list,
                 'match_threshold': float(threshold),
@@ -184,14 +188,20 @@ class SupabaseClient:
             if event_id:
                 rpc_params['target_event_id'] = event_id
 
+            logger.info(f"Calling RPC with params: event_id={event_id}, threshold={threshold}")
             result = self.client.rpc('get_photos_with_face', rpc_params).execute()
 
             photos = result.data or []
             logger.info(f"get_photos_with_face returned {len(photos)} photos for event={event_id}")
+            
+            if photos:
+                logger.info(f"First match details: {photos[0]}")
+            
             return photos
             
         except Exception as e:
             logger.error(f"Error getting photos: {e}")
+            logger.error(f"RPC params were: {rpc_params}")
             raise
 
 

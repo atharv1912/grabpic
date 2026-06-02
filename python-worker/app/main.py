@@ -3,10 +3,10 @@ import os
 import logging
 from dotenv import load_dotenv
 import traceback
-import tempfile
-
-from app.services.face_worker_optimized import FaceEmbeddingWorker
+import numpy as np
+import json
 from app.services.supabase_storage import StorageClient
+from app.services.face_worker_optimized import FaceEmbeddingWorker
 from app.services.supabase_client import SupabaseClient
 # Load environment variables
 load_dotenv()
@@ -43,6 +43,7 @@ def get_face_worker():
 
 
 def get_storage_client():
+    """Lazy initialization of R2 storage client"""
     global storage_client
     if storage_client is None:
         storage_client = StorageClient()
@@ -99,12 +100,12 @@ def process_photo():
         
         logger.info(f"Processing photo: {photo_id} (event: {event_id})")
         
-        # 2. Download image from Supabase Storage
+        # 2. Download image from R2 bucket
         storage = get_storage_client()
         local_image_path = None
         
         try:
-            logger.info(f"Downloading from storage: {storage_path}")
+            logger.info(f"Downloading from R2: {storage_path}")
             local_image_path = storage.download_image(storage_path)
             logger.info(f"Downloaded to: {local_image_path}")
             
@@ -257,16 +258,17 @@ def search_faces():
                 'required': ['event_id', 'selfie_storage_path']
             }), 400
         
-        logger.info(f"Searching for faces in event {event_id}")
+        logger.info(f"Searching for faces in event {event_id} with threshold {threshold}")
         
-        # 1. Download selfie
+        # 1. Download selfie from R2
         storage = get_storage_client()
-        
+        logger.info(f"Downloading selfie from R2: {selfie_path}")
+        local_selfie_path = storage.download_image(selfie_path)
         
         # 2. Extract face from selfie
         worker = get_face_worker()
-        local_selfie_path = storage.download_image(selfie_path)
         selfie_faces = worker.process_image(local_selfie_path)
+        logger.info(f"Detected {len(selfie_faces)} face(s) in selfie")
 
         if len(selfie_faces) == 0:
             return jsonify({
@@ -281,15 +283,79 @@ def search_faces():
         selfie_face = max(selfie_faces, key=lambda f: f.get_face_area())
         logger.info(f"Using selfie face with confidence: {selfie_face.confidence:.3f}")
         
-        # 3. Search for similar faces
+        # 3. Get all photos in event and calculate similarities
         supabase = get_supabase_client()
-        matches = supabase.get_photos_with_matching_face(
-            query_embedding=selfie_face.embedding,
-            event_id=event_id,
-            threshold=threshold
-        )
         
-        # 4. Clean up
+        try:
+            photos_result = supabase.client.table('photos').select('id').eq('event_id', event_id).execute()
+            photo_ids = [p['id'] for p in photos_result.data or []]
+            logger.info(f"Found {len(photo_ids)} photos in event")
+            
+            if not photo_ids:
+                return jsonify({
+                    'success': True,
+                    'event_id': event_id,
+                    'matches': 0,
+                    'threshold': threshold,
+                    'photos': []
+                }), 200
+            
+            # Get all faces and calculate similarities
+            matching_photos = []
+            
+            for photo_id in photo_ids:
+                faces_result = supabase.client.table('faces').select('*').eq('photo_id', photo_id).execute()
+                faces = faces_result.data or []
+                
+                for face_data in faces:
+                    try:
+                        stored_embedding = face_data.get('embedding', [])
+                        
+                        # Parse embedding (handle both string JSON and list formats)
+                        if isinstance(stored_embedding, str):
+                            stored_embedding = np.array(json.loads(stored_embedding))
+                        elif isinstance(stored_embedding, list):
+                            stored_embedding = np.array(stored_embedding)
+                        else:
+                            continue
+                        
+                        if stored_embedding.size == 0:
+                            continue
+                        
+                        # Calculate similarity
+                        similarity = float(np.dot(selfie_face.embedding, stored_embedding))
+                        
+                        if similarity >= threshold:
+                            matching_photos.append({
+                                'photo_id': photo_id,
+                                'similarity': similarity,
+                                'confidence': face_data.get('confidence')
+                            })
+                    except Exception as e:
+                        logger.warning(f"Error processing face: {e}")
+                        continue
+            
+            # Sort by similarity
+            matching_photos.sort(key=lambda x: x['similarity'], reverse=True)
+            
+            logger.info(f"Found {len(matching_photos)} matching photos")
+            
+            return jsonify({
+                'success': True,
+                'event_id': event_id,
+                'matches': len(matching_photos),
+                'threshold': threshold,
+                'photos': matching_photos
+            }), 200
+            
+        except Exception as e:
+            logger.error(f"Search failed: {e}")
+            logger.error(traceback.format_exc())
+            return jsonify({
+                'error': 'Search failed',
+                'details': str(e)
+            }), 500
+    
     except Exception as e:
         logger.error(f"Search failed: {e}")
         logger.error(traceback.format_exc())
@@ -301,17 +367,6 @@ def search_faces():
     finally:
         if local_selfie_path and os.path.exists(local_selfie_path):
             os.remove(local_selfie_path)
-
-    # 5. Return results
-    logger.info(f"Found {len(matches)} matching photos")
-
-    return jsonify({
-        'success': True,
-        'event_id': event_id,
-        'matches': len(matches),
-        'threshold': threshold,
-        'photos': matches
-    }), 200
 
 
 if __name__ == '__main__':
