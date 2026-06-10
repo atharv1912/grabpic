@@ -13,7 +13,7 @@ export const publishPhotoJob = async ({ photoId, r2Key, eventId }) => {
     url: workerUrl,
     body: {
       photo_id: photoId,
-      r2_key: r2Key,
+      storage_path: r2Key,
       event_id: eventId,
     },
     retries: 3,          // QStash retries if worker fails

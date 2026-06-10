@@ -1,18 +1,47 @@
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = 'http://localhost:3000/api';
+
+const getAuthHeader = () => {
+  const saved = localStorage.getItem('grabpic_user');
+  if (saved) {
+    const user = JSON.parse(saved);
+    if (user && user.token) {
+      return { 'Authorization': `Bearer ${user.token}` };
+    }
+  }
+  return {};
+};
 
 export const getMyPhotosInGroup = async (groupId) => {
-  return [
-    { id: '1', url: 'https://picsum.photos/seed/a/300/200', uploadedBy: 'Rahul' },
-    { id: '2', url: 'https://picsum.photos/seed/b/300/200', uploadedBy: 'Ayesha' },
-    { id: '3', url: 'https://picsum.photos/seed/c/300/200', uploadedBy: 'You' },
-  ]
-}
+  const response = await fetch(`${BASE_URL}/events/${groupId}/photos/my`, {
+    headers: { ...getAuthHeader() },
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.message || 'Failed to fetch your photos');
+  }
+  return await response.json();
+};
 
 export const uploadPhoto = async (groupId, file) => {
-  // later this will use FormData to send the actual file
-  console.log(`Uploading ${file.name} to group ${groupId}`)
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const response = await fetch(`${BASE_URL}/events/${groupId}/photos`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeader(),
+    },
+    body: formData,
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to upload photo');
+  }
+  
   return {
     success: true,
-    message: 'Photo uploaded, face recognition is processing'
-  }
-}
+    message: 'Photo uploaded successfully! Face recognition is processing in the background.',
+    photo: data,
+  };
+};

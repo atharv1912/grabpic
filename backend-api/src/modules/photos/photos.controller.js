@@ -20,7 +20,7 @@ export const getEventPhotos = async(req , res ,next) =>{
     try {
         const photos = await photoservice.getEventPhotos({
             eventId: req.params.eventId, 
-            userId : req.user.userId,
+            userId : req.user.id,
         });
         res.json(photos);
 
@@ -32,9 +32,21 @@ export const deletePhoto = async (req, res, next) => {
     try {
         await photoservice.deletePhoto({
             photoId: req.params.photoId,
-            userId: req.user.userId,
+            userId: req.user.id,
         });
         res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getMyPhotos = async (req, res, next) => {
+    try {
+        const photos = await photoservice.getMyPhotosInEvent({
+            eventId: req.params.eventId,
+            userId: req.user.id,
+        });
+        res.json(photos);
     } catch (err) {
         next(err);
     }

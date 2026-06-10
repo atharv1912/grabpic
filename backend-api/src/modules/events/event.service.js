@@ -27,11 +27,41 @@ export const joinEvent = async (joinCode, userId) => {
 }
 
 export const getMyEvents = async (userId) => {
-    const {data: events, error} = await supabase.from('events')
-        .select('*, event_participants!inner(user_id)')
-        .eq('event_participants.user_id', userId);
-    if(error) throw error;
-    return events;
+    // 1. Fetch event ids this user is a participant of
+    const { data: memberEvents, error: memberError } = await supabase
+        .from('event_participants')
+        .select('event_id')
+        .eq('user_id', userId);
+
+    if (memberError) throw memberError;
+    if (!memberEvents || memberEvents.length === 0) return [];
+
+    const eventIds = memberEvents.map(me => me.event_id);
+
+    // 2. Fetch events along with participant and photo counts
+    const { data: events, error } = await supabase
+        .from('events')
+        .select(`
+            *,
+            event_participants(count),
+            photos(count)
+        `)
+        .in('id', eventIds)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // 3. Map to match frontend expectations
+    return events.map(e => ({
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        joinCode: e.join_code,
+        createdBy: e.created_by,
+        createdAt: e.created_at,
+        memberCount: e.event_participants?.[0]?.count || 0,
+        photoCount: e.photos?.[0]?.count || 0
+    }));
 };
 
 export const getEventById = async ({ eventId, userId }) => {
@@ -47,13 +77,24 @@ export const getEventById = async ({ eventId, userId }) => {
 
   const { data: event, error } = await supabase
     .from('events')
-    .select('*, event_participants(user_id)')
+    .select('*, event_participants(user_id, users(name))')
     .eq('id', eventId)
     .single();
 
   if (error) throw new Error(error.message);
 
-  return event;
+  // Map participants to just members array of names
+  const members = event.event_participants?.map(p => p.users?.name || 'Unknown') || [];
+
+  return {
+    id: event.id,
+    name: event.name,
+    description: event.description,
+    joinCode: event.join_code,
+    createdBy: event.created_by,
+    createdAt: event.created_at,
+    members: members
+  };
 };
 
 
