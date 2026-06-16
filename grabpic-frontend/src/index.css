@@ -4,41 +4,41 @@
 /* ─── Design Tokens ─────────────────────────────────────────────────── */
 :root {
   /* Surfaces */
-  --bg:          #F9F7F5;
-  --surface:     #FFFFFF;
+  --bg: #F9F7F5;
+  --surface: #FFFFFF;
   --surface-alt: #F4F1EE;
 
   /* Borders */
-  --border:      #E5E0DA;
-  --border-light:#EDE9E4;
+  --border: #E5E0DA;
+  --border-light: #EDE9E4;
 
   /* Text */
-  --text-primary:   #1C1916;
+  --text-primary: #1C1916;
   --text-secondary: #6B6460;
-  --text-muted:     #A39993;
+  --text-muted: #A39993;
 
   /* Accent — violet‑indigo */
-  --accent:        #5B4AF7;
-  --accent-hover:  #4A3AE6;
-  --accent-soft:   #EEECff;
-  --accent-ring:   rgba(91, 74, 247, 0.18);
+  --accent: #5B4AF7;
+  --accent-hover: #4A3AE6;
+  --accent-soft: #EEECff;
+  --accent-ring: rgba(91, 74, 247, 0.18);
 
   /* Danger */
-  --danger:        #DC2626;
-  --danger-hover:  #B91C1C;
-  --danger-soft:   #FEF2F2;
+  --danger: #DC2626;
+  --danger-hover: #B91C1C;
+  --danger-soft: #FEF2F2;
 
   /* Elevation */
-  --shadow-xs:  0 1px 2px 0 rgba(28, 25, 22, 0.04);
-  --shadow-sm:  0 1px 3px 0 rgba(28, 25, 22, 0.07), 0 1px 2px -1px rgba(28, 25, 22, 0.05);
-  --shadow-md:  0 4px 12px -2px rgba(28, 25, 22, 0.08), 0 2px 6px -2px rgba(28, 25, 22, 0.06);
-  --shadow-lg:  0 12px 32px -4px rgba(28, 25, 22, 0.10), 0 4px 12px -4px rgba(28, 25, 22, 0.07);
+  --shadow-xs: 0 1px 2px 0 rgba(28, 25, 22, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(28, 25, 22, 0.07), 0 1px 2px -1px rgba(28, 25, 22, 0.05);
+  --shadow-md: 0 4px 12px -2px rgba(28, 25, 22, 0.08), 0 2px 6px -2px rgba(28, 25, 22, 0.06);
+  --shadow-lg: 0 12px 32px -4px rgba(28, 25, 22, 0.10), 0 4px 12px -4px rgba(28, 25, 22, 0.07);
 
   /* Radius */
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  14px;
-  --radius-xl:  20px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   /* Motion */
@@ -46,7 +46,9 @@
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -80,10 +82,23 @@ body {
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
 
 /* ─── Typography Utilities ──────────────────────────────────────────── */
 .font-serif {

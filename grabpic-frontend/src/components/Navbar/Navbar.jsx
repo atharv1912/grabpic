@@ -54,41 +54,42 @@ function Navbar() {
       </button>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
-        {/* User greeting */}
-        <span
-          className="hidden sm:flex items-center gap-2 text-sm font-medium"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <span
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white select-none"
-            style={{ background: 'linear-gradient(135deg, var(--accent), #8B6CF6)' }}
-          >
-            {getInitial(user?.name)}
-          </span>
-          <span className="hidden md:inline">{user?.name}</span>
-        </span>
-
-        {/* Profile button */}
+      <div className="flex items-center gap-4">
+        {/* Profile Button (Name + Avatar) */}
         <button
           onClick={() => navigate('/profile')}
-          className="px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer border select-none hover:scale-[1.02] active:scale-[0.98]"
           style={{
-            color: 'var(--text-secondary)',
-            background: 'transparent',
-            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            borderColor: 'var(--border)',
+            boxShadow: 'var(--shadow-xs)',
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = 'var(--surface-alt)'
-            e.currentTarget.style.color = 'var(--text-primary)'
-            e.currentTarget.style.borderColor = 'var(--border)'
+            e.currentTarget.style.borderColor = 'var(--border-light)'
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--text-secondary)'
+            e.currentTarget.style.background = 'var(--surface)'
+            e.currentTarget.style.borderColor = 'var(--border)'
           }}
         >
-          Profile
+          <div
+            className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center text-[11px] font-bold text-white shadow-xs"
+            style={{ background: 'linear-gradient(135deg, var(--accent), #8B6CF6)' }}
+          >
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitial(user?.name)
+            )}
+          </div>
+          <span className="text-sm font-bold tracking-tight pr-1" style={{ color: 'var(--text-secondary)' }}>
+            {user?.name || 'My Profile'}
+          </span>
         </button>
 
         {/* Logout button */}

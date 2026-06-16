@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getGroupById } from '../../services/groups'
 import { getMyPhotosInGroup, uploadPhoto } from '../../services/photos'
-import { ChevronLeft, UploadCloud, Camera, Image as ImageIcon, Trash2, Download, ExternalLink } from 'lucide-react'
+import { ChevronLeft, UploadCloud, Camera, Image as ImageIcon, Trash2, Download, ExternalLink, Share2, Check } from 'lucide-react'
 
 // Helper for member avatar gradients
 const GRADIENTS = [
@@ -25,6 +25,31 @@ function Group() {
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [backHovered, setBackHovered] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShareCode = async () => {
+    const shareText = `Join my event group "${group?.name}" on GrabPic using code: ${group?.joinCode}`
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: group?.name,
+          text: shareText,
+          url: window.location.origin
+        })
+        return
+      } catch (err) {
+        console.log('Web Share failed or cancelled, falling back to clipboard copy:', err)
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(group?.joinCode || '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy group code:', err)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +117,7 @@ function Group() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col gap-6 min-h-[calc(100vh-57px)]">
-      
+
       {/* Back navigation */}
       <button
         onClick={() => navigate('/dashboard')}
@@ -125,13 +150,33 @@ function Group() {
         />
 
         <div className="flex items-center justify-between gap-6 flex-wrap pl-2">
-          <div>
+          <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               {group.name}
             </h1>
-            <p className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: 'var(--text-muted)' }}>
-              Event Photo Group • {group.members.length} members
-            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                Event Photo Group • {group.members.length} members
+              </p>
+              <span className="w-1 h-1 rounded-full bg-stone-300 hidden sm:inline-block" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+                  Code: {group.joinCode}
+                </span>
+                <button
+                  onClick={handleShareCode}
+                  className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border transition-all duration-150 cursor-pointer active:scale-[0.98]"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  {copied ? <Check size={11} className="text-emerald-500" /> : <Share2 size={11} />}
+                  <span>{copied ? 'Copied!' : 'Share'}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Member avatars list */}
@@ -189,7 +234,7 @@ function Group() {
             background: dragOver ? 'var(--accent-soft)' : 'var(--bg)',
           }}
         >
-          {previewUrl ? (
+          {previewUrl && selectedFile ? (
             <div className="flex flex-col items-center gap-3 w-full max-w-[280px]">
               <div className="relative group rounded-lg overflow-hidden border shadow-sm h-32 w-full bg-stone-100">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />

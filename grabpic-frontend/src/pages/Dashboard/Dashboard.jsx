@@ -67,7 +67,7 @@ function GroupCard({ group, onClick }) {
               style={{ color: hovered ? 'var(--accent)' : 'var(--text-secondary)' }}
             />
           </div>
-          
+
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
             style={{

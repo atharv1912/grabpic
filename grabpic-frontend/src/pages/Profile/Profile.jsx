@@ -36,7 +36,7 @@ function Profile() {
         const saved = localStorage.getItem('grabpic_user')
         if (!saved) return
         const parsed = JSON.parse(saved)
-        
+
         // 1. Fetch live user details
         const res = await fetch('http://localhost:3000/api/users/me', {
           headers: { 'Authorization': `Bearer ${parsed.token}` }
@@ -47,7 +47,7 @@ function Profile() {
           setProfileUser(updatedUser)
           login(updatedUser)
         }
-        
+
         // 2. Fetch groups to calculate stats
         const groupsData = await getUserGroups()
         setStats({
@@ -69,27 +69,27 @@ function Profile() {
   const handleUploadSelfie = async (e) => {
     const file = e.target.files[0]
     if (!file) return
-    
+
     setUploadingSelfie(true)
     try {
       const saved = localStorage.getItem('grabpic_user')
       if (!saved) return
       const parsed = JSON.parse(saved)
-      
+
       const formData = new FormData()
       formData.append('photo', file)
-      
+
       const res = await fetch('http://localhost:3000/api/users/selfie', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${parsed.token}` },
         body: formData
       })
-      
+
       const data = await res.json()
       if (!res.ok) {
         throw new Error(data.message || 'Upload failed')
       }
-      
+
       alert('Selfie uploaded successfully! Face embedding will be used to automatically find your photos in all groups.')
       const updatedUser = { ...parsed, ...data.user }
       setProfileUser(updatedUser)
@@ -128,7 +128,7 @@ function Profile() {
           style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #8B6CF6 60%, #C084FC 100%)', opacity: 0.12 }}
         />
         <div className="px-7 pb-7" style={{ marginTop: '-40px' }}>
-          
+
           {/* Avatar / Selfie Upload Slot */}
           <div className="relative group/avatar w-20 h-20 mb-4">
             <div
@@ -148,14 +148,14 @@ function Profile() {
               ) : (
                 getInitial(profileUser?.name)
               )}
-              
+
               {uploadingSelfie && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
                 </div>
               )}
             </div>
-            
+
             {/* Hover overlay to change selfie */}
             <label
               className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center text-[10px] text-white font-semibold cursor-pointer transition-opacity duration-200 text-center"
